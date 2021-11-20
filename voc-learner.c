@@ -181,7 +181,7 @@ void printScore(int score, int total) {
  * until the word typed is correct)
  */
 void runApp(voc_elt *words, int *randomOrder, int wordsNumber, int mode) {
-  int i, rindex, ierror = -1;
+  int i, rindex, ierror = 0;
   int correctAnswer;
   char answer[100];
   char toTranslate[100];
@@ -205,8 +205,8 @@ void runApp(voc_elt *words, int *randomOrder, int wordsNumber, int mode) {
     correctAnswer = compareWords(expectedAnswer, answer);
     getchar();
     if (!correctAnswer) {
-      ++ierror;
       error[ierror] = rindex;
+      ++ierror;
       askForRewirte(words[rindex]);
     } else {
       ++score;
