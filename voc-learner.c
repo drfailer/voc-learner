@@ -154,6 +154,7 @@ void askForRewirte(voc_elt w) {
   do {
     system("clear");
     printf("Faulty answer, please rewrite %s%s%s:\n", GRN, w.word, RESET);
+    fflush(stdin);
     fgets(buff, 100, stdin);
     correctAnswer = compareWords(w.word, buff);
     if (!correctAnswer) {
@@ -204,6 +205,7 @@ void runApp(voc_elt *words, int *randomOrder, int wordsNumber, int mode) {
     fgets(answer, 100, stdin);
     correctAnswer = compareWords(expectedAnswer, answer);
     getchar();
+    fflush(stdin);
     if (!correctAnswer) {
       error[ierror] = rindex;
       ++ierror;
