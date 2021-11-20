@@ -3,6 +3,7 @@
 #include <string.h>
 #include <time.h>
 #define MAX_EXCHANGE 100
+#define SEPARATOR_CHAR ';'
 /* Colors: */
 #define RED "\033[31m"
 #define GRN "\033[32m"
@@ -13,14 +14,6 @@ typedef struct voc_elt {
   char translation[50];
 } voc_elt;
 
-void securedFree(void *ptr, char *ptrName) {
-  if (ptr == NULL) {
-    fprintf(stderr, "Error: memory allocation failed on %s.\n", ptrName);
-  } else {
-    free(ptr);
-  }
-}
-
 /* withdraw the word and the translation on the line stored in buff */
 void parseLine(voc_elt *words, char buff[100], int index) {
   int i = 0, iw = 0;
@@ -29,7 +22,7 @@ void parseLine(voc_elt *words, char buff[100], int index) {
   while (buff[i] == ' ' && ++i)
     ;
   // catch the word
-  while (buff[i] != 0 && buff[i] != ':') {
+  while (buff[i] != 0 && buff[i] != SEPARATOR_CHAR) {
     words[index].word[iw] = buff[i];
     ++i;
     ++iw;
@@ -256,8 +249,8 @@ int main(int argc, char **argv) {
     fclose(vocFile);
   }
   // free
-  securedFree(words, "words");
-  securedFree(randomOrder, "randomOrder");
+  free(words);
+  free(randomOrder);
 
   return 0;
 }
