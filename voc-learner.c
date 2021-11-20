@@ -149,12 +149,28 @@ int compareWords(char w[50], char *userInput) {
  */
 void askForRewirte(voc_elt w) {
   char buff[100];
+  int correctAnswer;
 
   do {
     system("clear");
     printf("Faulty answer, please rewrite %s%s%s:\n", GRN, w.word, RESET);
     fgets(buff, 100, stdin);
-  } while (!strcmp(w.word, buff));
+    correctAnswer = compareWords(w.word, buff);
+    if (!correctAnswer) {
+      getchar();
+      fflush(stdin);
+    }
+  } while (!correctAnswer);
+}
+
+void printScore(int score, int total) {
+  float p = (float) score / total;
+
+  if (p > 0.5) {
+    printf("score: %s%d%s\n", GRN, (int) (100*p), RESET);
+  } else {
+    printf("score: %s%d%s\n", RED, (int) (100*p), RESET);
+  }
 }
 
 /**
@@ -165,11 +181,14 @@ void askForRewirte(voc_elt w) {
  * until the word typed is correct)
  */
 void runApp(voc_elt *words, int *randomOrder, int wordsNumber, int mode) {
-  int i, rindex;
+  int i, rindex, ierror = -1;
   int correctAnswer;
   char answer[100];
   char toTranslate[100];
   char expectedAnswer[100];
+  int score = 0;
+  int error[500];
+  char quit = 'c';
 
   for (i = 0; i < wordsNumber; ++i) {
     rindex = randomOrder[i];
@@ -186,8 +205,18 @@ void runApp(voc_elt *words, int *randomOrder, int wordsNumber, int mode) {
     correctAnswer = compareWords(expectedAnswer, answer);
     getchar();
     if (!correctAnswer) {
+      ++ierror;
+      error[ierror] = rindex;
       askForRewirte(words[rindex]);
+    } else {
+      ++score;
     }
+  }
+  printScore(score, wordsNumber);
+  printf("Hit q to quit, enything else to continue\n");
+  quit = getchar();
+  if (ierror != -1 && quit != 'q') {
+    runApp(words, error, ierror, mode);
   }
 }
 
