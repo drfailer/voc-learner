@@ -198,6 +198,7 @@ void runApp(voc_elt *words, int *randomOrder, int wordsNumber, int mode) {
   }
 }
 
+/* Used to parse options in the program parameters */
 void parseCommandLine(int argc, char **argv, char *fileName, int *mode) {
   int optionIndex = 1;
   int fileIndex = 2;
