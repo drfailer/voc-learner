@@ -172,7 +172,8 @@ void runApp(voc_elt *words, int *randomOrder, int wordsNumber, int mode) {
   char expectedAnswer[100];
 
   for (i = 0; i < wordsNumber; ++i) {
-    if (mode == 0) {
+    rindex = randomOrder[i];
+    if (mode == 1) {
       strcpy(toTranslate, words[rindex].word);
       strcpy(expectedAnswer, words[rindex].translation);
     } else {
@@ -180,7 +181,6 @@ void runApp(voc_elt *words, int *randomOrder, int wordsNumber, int mode) {
       strcpy(expectedAnswer, words[rindex].word);
     }
     system("clear");
-    rindex = randomOrder[i];
     printf("Translate: %s\n\nAnswer: ", toTranslate);
     fgets(answer, 100, stdin);
     correctAnswer = compareWords(expectedAnswer, answer);
