@@ -11,33 +11,45 @@
 
 typedef struct voc_elt {
   char word[50];
-  char translation[50];
+  char frensh[50];
 } voc_elt;
 
-/* withdraw the word and the translation on the line stored in buff */
+/* Utility function: return 1 if the characters is an ending characters,
+ * aka if the characters is different to 0 and '\n'
+ */
+static inline int isEndChar(char c) {
+  return (c == '\n' || c == 0);
+}
+
+/* Remove trailing char on stdin */
+void flushInput() {
+  char c;
+  while ((c = fgetc(stdin)) != EOF && c != '\n')
+    ;
+}
+
+/* withdraw the word and the translation on the line stored in buff and update
+ * `words` table
+ */
 void parseLine(voc_elt *words, char buff[100], int index) {
   int i = 0, iw = 0;
 
-  // remove spacing
-  while (buff[i] == ' ' && ++i)
-    ;
   // catch the word
-  while (buff[i] != 0 && buff[i] != SEPARATOR_CHAR) {
+  while (buff[i] && buff[i] != SEPARATOR_CHAR) {
     words[index].word[iw] = buff[i];
     ++i;
     ++iw;
   }
+  words[index].word[iw] = 0;
   iw = 0;
   ++i;
-  // remove spacing
-  while (buff[i] == ' ' && ++i)
-    ;
   // catch the translation
-  while (buff[i] != 0 && buff[i] != '\n') {
-    words[index].translation[iw] = buff[i];
+  while (!isEndChar(buff[i])) {
+    words[index].frensh[iw] = buff[i];
     ++i;
     ++iw;
   }
+  words[index].frensh[iw] = 0;
 }
 
 /* Create an array of `voc_elt` using the content of the file given as parameter
@@ -95,6 +107,7 @@ int *generateRandomOrder(int n) {
  * side effect: print the correct aswer with putting characters in green or in
  * red depending on the maching with userInput.
  * Moreover the fuction consider that words between parentheses are optional.
+ * TODO: remove this and write a better fonctions
  */
 int compareWords(char w[50], char *userInput) {
   int iw = 0, iui = 0;
@@ -104,9 +117,9 @@ int compareWords(char w[50], char *userInput) {
 
   // clear the screen before dispalaying the answer
   system("clear");
-  while (w[iw] && userInput[iui] && userInput[iui] != '\n') {
-    if (!inParent || compareInParent) {
-      if (w[iw] == userInput[iui]) {
+  while (w[iw] || !isEndChar(userInput[iui])) {
+    if (!inParent || compareInParent) { // enter word compareson
+      if (!isEndChar(userInput[iui]) && w[iw] == userInput[iui]) {
         // print the letter in gren if it's correct
         printf("%s%c%s", GRN, w[iw], RESET);
         if (w[iw] == '(') {
@@ -115,31 +128,28 @@ int compareWords(char w[50], char *userInput) {
         }
       } else if (w[iw] != '(') {
         result = 0;
-        printf("%s%c%s", RED, w[iw], RESET);
+        printf("%s%c%s", RED, w[iw], RESET); // TODO: don't print the answer this way
       } else {
         inParent = 1;
+        printf("%s(%s", GRN, RESET);
       }
       ++iw;
       ++iui;
     } else {
-      printf("%s%c%s", GRN, w[iw], RESET);
-      if (w[iw] == '(') { // security if multiple parent
-        ++inParent;
-        ++compareInParent;
-      } else if (w[iw] == ')') {
-        --inParent;
-        if (compareInParent > 0)
-          --compareInParent;
-        // be sure not to compare the space after the closing parent, indeed,
-        // due to the fact that the text in the parent is optional, if the user
-        // didn't write it, we dont want to count two spaces
-        printf(" ");
+      while (w[iw] != ')') {
+        printf("%s%c%s", GRN, w[iw], RESET);
         ++iw;
       }
       ++iw;
-    }
+      if (w[iw] == ' ') {
+        ++iw;
+      } // jump over the space as we don't want to compare two spaces
+    } // we don't compare what's inside parent
   }
-  printf("%s%s%s\n", RED, w + iw, RESET);
+  printf("\n");
+  if (userInput[0] == 0 || userInput[0] == '\n') {
+    result = 0;
+  }
 
   return result;
 }
@@ -147,30 +157,28 @@ int compareWords(char w[50], char *userInput) {
 /* Ask the user to rewrite the correct aswer and loop util the word typed is
  * really correct (use strcmp this time)
  */
-void askForRewirte(voc_elt w) {
-  char buff[100];
+void askForRewirte(char word[50]) {
+  char buff[100] = {0};
   int correctAnswer;
 
   do {
     system("clear");
-    printf("Faulty answer, please rewrite %s%s%s:\n", GRN, w.word, RESET);
-    fflush(stdin);
+    printf("Faulty answer, please rewrite %s%s%s:\n", GRN, word, RESET);
     fgets(buff, 100, stdin);
-    correctAnswer = compareWords(w.word, buff);
+    correctAnswer = compareWords(word, buff);
     if (!correctAnswer) {
       getchar();
-      fflush(stdin);
     }
   } while (!correctAnswer);
 }
 
 void printScore(int score, int total) {
-  float p = (float) score / total;
+  float p = (float)score / total;
 
   if (p > 0.5) {
-    printf("score: %s%d%s\n", GRN, (int) (100*p), RESET);
+    printf("score: %s%d%s\n", GRN, (int)(100 * p), RESET);
   } else {
-    printf("score: %s%d%s\n", RED, (int) (100*p), RESET);
+    printf("score: %s%d%s\n", RED, (int)(100 * p), RESET);
   }
 }
 
@@ -184,9 +192,9 @@ void printScore(int score, int total) {
 void runApp(voc_elt *words, int *randomOrder, int wordsNumber, int mode) {
   int i, rindex, ierror = 0;
   int correctAnswer;
-  char answer[100];
-  char toTranslate[100];
-  char expectedAnswer[100];
+  char answer[50];
+  char toTranslate[50];
+  char expectedAnswer[50];
   int score = 0;
   int error[500];
   char quit = 'c';
@@ -195,21 +203,22 @@ void runApp(voc_elt *words, int *randomOrder, int wordsNumber, int mode) {
     rindex = randomOrder[i];
     if (mode == 1) {
       strcpy(toTranslate, words[rindex].word);
-      strcpy(expectedAnswer, words[rindex].translation);
+      strcpy(expectedAnswer, words[rindex].frensh);
     } else {
-      strcpy(toTranslate, words[rindex].translation);
+      strcpy(toTranslate, words[rindex].frensh);
       strcpy(expectedAnswer, words[rindex].word);
     }
     system("clear");
     printf("Translate: %s\n\nAnswer: ", toTranslate);
-    fgets(answer, 100, stdin);
+    flushInput();
+    fgets(answer, 50, stdin);
     correctAnswer = compareWords(expectedAnswer, answer);
     getchar();
-    fflush(stdin);
     if (!correctAnswer) {
       error[ierror] = rindex;
       ++ierror;
-      askForRewirte(words[rindex]);
+      if (mode != 1)
+        askForRewirte(expectedAnswer);
     } else {
       ++score;
     }
@@ -228,19 +237,17 @@ void parseCommandLine(int argc, char **argv, char *fileName, int *mode) {
   int fileIndex = 2;
 
   if (argc == 2) {
-    printf("hello1\n");
     strcpy(fileName, argv[1]);
     *mode = 0;
   } else if (argc == 3) {
-    printf("hello2\n");
     if (argv[2][0] == '-') {
       optionIndex = 2;
       fileIndex = 1;
     }
     if (strcmp(argv[optionIndex], "-fr")) {
-      *mode = 1;
-    } else if (strcmp(argv[optionIndex], "-vo")) {
       *mode = 0;
+    } else if (strcmp(argv[optionIndex], "-vo")) {
+      *mode = 1;
     } else {
       *mode = -1;
     }
@@ -262,6 +269,7 @@ int main(int argc, char **argv) {
     printf("%s\n", fileName);
     vocFile = fopen(fileName, "r");
     if (mode != -1 && vocFile != NULL) {
+      // TODO: count the number of lines in the file manualy
       fscanf(vocFile, "%d%*c",
              &wordsNumber); // the number of lines in the file is writen on the
                             // first line in the file

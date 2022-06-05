@@ -1,8 +1,9 @@
 CC=gcc
-CFLAGS=-Wall -Wextra
+CFLAGS=-Wall -Wextra -g
+SOURCES=voc-learner.c
 
-voc-learner: voc-learner.c
+voc-learner: $(SOURCES)
 	$(CC) $(CFLAGS) -o $@ $^
 
-debug: voc-learner.c
-	$(CC) $(CFLAGS) -g -o $@ $^
+clean: clean
+	rm voc-learner
